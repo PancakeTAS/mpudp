@@ -85,7 +85,7 @@ namespace {
 
         Tunnel tun1{
             .fd = sock::openBoundDgramSocket(5000),
-            .remote = sock::ipFromString("93.229.85.103")
+            .remote = sock::ipFromString("127.0.0.1")
         };
         epoll::addFd(tunnels.epoll_fd, *tun1.fd);
         tunnels.tunnels[*tun1.fd] = std::move(tun1);

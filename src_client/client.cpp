@@ -29,7 +29,7 @@ namespace {
 
     struct Tunnels {
         own::owned_fd epoll_fd;
-        in_addr_t remote{};
+        in_addr_t remote;
         std::unordered_map<int, Tunnel> tunnels;
     };
 
@@ -88,8 +88,10 @@ namespace {
 
             // remove tunnels which haven't established in 5s
             const time_t now = std::time(nullptr);
-            if (now - tunnel.last_active > 5)
+            if (now - tunnel.last_active > 5) {
+                epoll::removeFd(tunnels.epoll_fd, *tunnel.fd);
                 tunnels.tunnels.erase(it);
+            }
         }
 
         // (re)-add the tunnel
@@ -114,6 +116,7 @@ namespace {
     [[noreturn]] void try_main() {
         Tunnels tunnels{
             .epoll_fd = epoll::createEpollFd(),
+            .remote = sock::ipFromString("127.0.0.1")
         };
 
         while (true) {
