@@ -12,6 +12,8 @@ namespace epoll {
     own::owned_fd createEpollFd();
     /// add file descriptor to epoll instance
     void addFd(own::owned_fd& epoll_fd, int fd);
+    /// remove file descriptor from epoll instance
+    void removeFd(own::owned_fd& epoll_fd, int fd);
     /// unsafe: poll epoll instance for events
     size_t poll(own::owned_fd& epoll_fd, struct epoll_event* events, size_t max_events);
     /// poll epoll instance for events

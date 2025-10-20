@@ -11,11 +11,17 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-own::owned_fd sock::openBoundDgramSocket(uint16_t port) {
+own::owned_fd sock::openDgramSocket() {
     const int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd < 0)
         throw "socket() failed";
+
     own::owned_fd fd{new int(sockfd)};
+    return fd;
+}
+
+own::owned_fd sock::openBoundDgramSocket(uint16_t port) {
+    own::owned_fd fd = sock::openDgramSocket();
 
     const struct sockaddr_in saddr_in{
         .sin_family = AF_INET,
@@ -24,7 +30,7 @@ own::owned_fd sock::openBoundDgramSocket(uint16_t port) {
             .s_addr = INADDR_ANY,
         }
     };
-    if (bind(sockfd, reinterpret_cast<const struct sockaddr*>(&saddr_in), sizeof(saddr_in)) < 0)
+    if (bind(*fd, reinterpret_cast<const struct sockaddr*>(&saddr_in), sizeof(saddr_in)) < 0)
         throw "bind() failed";
     return fd;
 }

@@ -13,6 +13,8 @@
 namespace sock {
     template<size_t N>
     using buf = std::array<char, N>;
+    /// open a UDP socket
+    own::owned_fd openDgramSocket();
     /// open a UDP socket bound to the given port at any address
     own::owned_fd openBoundDgramSocket(uint16_t port);
     /// translate a string into an ip address

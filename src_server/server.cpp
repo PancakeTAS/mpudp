@@ -29,6 +29,7 @@ namespace {
     };
 
     const size_t RECV_SEND_BUF = 65535;
+    const ssize_t HSLEN = 5;
     void pollTunnels(Tunnels& tunnels, const std::function<void(sock::buf<RECV_SEND_BUF>&, size_t)>& onData) {
         static sock::buf<RECV_SEND_BUF> recvbuf, sendbuf;
         static std::array<struct epoll_event, 16> events;
@@ -51,8 +52,8 @@ namespace {
             const bool valid = inaddr.sin_addr.s_addr == tunnel.remote;
             if (!tunnel.established) {
                 // establish if source ip is valid
-                // and a 5-byte packet is received
-                if (nb == 5 && valid)
+                // and a HSLEN-byte packet is received
+                if (nb == HSLEN && valid)
                     tunnel.established = true;
 
                 // write back 1 if established, else 0
@@ -105,7 +106,7 @@ int main() {
     try {
         try_main();
     } catch (const std::string& e) {
-        std::cerr << e << " (" << strerror(errno) << ")\n";
+        std::cerr << e << " (" << std::strerror(errno) << ")\n";
         return 1;
     }
 }
