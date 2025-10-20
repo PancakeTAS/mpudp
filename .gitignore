@@ -1,0 +1,7 @@
+# cmake files
+/build
+
+# ide/lsp files
+/.zed
+/.clangd
+/.cache
