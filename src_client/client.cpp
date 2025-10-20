@@ -131,7 +131,7 @@ namespace {
 int main() {
     try {
         try_main();
-    } catch (const std::string& e) {
+    } catch (const char* e) {
         std::cerr << e << " (" << std::strerror(errno) << ")\n";
         return 1;
     }
