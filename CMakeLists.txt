@@ -9,12 +9,13 @@ project(mpudp
     LANGUAGES CXX)
 
 set(SOURCES
+    "src/server/tun.cpp"
     "src/epoll.cpp"
     "src/sock.cpp")
 
 add_library(mpudp_lib STATIC ${SOURCES})
-add_executable(mpudp_client "src_client/client.cpp")
-add_executable(mpudp_server "src_server/server.cpp")
+add_executable(mpudp_client "src/client/main.cpp")
+add_executable(mpudp_server "src/server/main.cpp")
 
 foreach(target mpudp_lib mpudp_client mpudp_server)
     set_target_properties(${target} PROPERTIES
