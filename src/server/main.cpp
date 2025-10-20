@@ -1,3 +1,4 @@
+#include "constants.hpp"
 #include "server/tun.hpp"
 #include "sock.hpp"
 
@@ -13,7 +14,6 @@ namespace {
     [[noreturn]] void try_main() {
         tun::Tunnel tun{{
             { 5000, sock::ipFromString("127.0.0.1") },
-            { 5001, sock::ipFromString("127.0.0.2") },
         }};
 
         while (true)

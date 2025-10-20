@@ -12,10 +12,16 @@ set(SOURCES
     "src/server/tun.cpp"
     "src/epoll.cpp"
     "src/sock.cpp")
+set(SERVER_SOURCES
+    "src/server/tun.cpp"
+    "src/server/main.cpp")
+set(CLIENT_SOURCES
+    "src/client/tun.cpp"
+    "src/client/main.cpp")
 
 add_library(mpudp_lib STATIC ${SOURCES})
-add_executable(mpudp_client "src/client/main.cpp")
-add_executable(mpudp_server "src/server/main.cpp")
+add_executable(mpudp_client ${CLIENT_SOURCES})
+add_executable(mpudp_server ${SERVER_SOURCES})
 
 foreach(target mpudp_lib mpudp_client mpudp_server)
     set_target_properties(${target} PROPERTIES

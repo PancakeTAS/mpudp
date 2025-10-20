@@ -1,4 +1,5 @@
 #include "server/tun.hpp"
+#include "constants.hpp"
 #include "epoll.hpp"
 #include "sock.hpp"
 
