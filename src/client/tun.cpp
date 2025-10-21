@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <ctime>
 #include <functional>
+#include <iostream>
 #include <utility>
 
 #include <netinet/in.h>
@@ -42,6 +43,7 @@ void Tunnel::validateConnection(uint16_t port) {
         // remove tunnels which haven't established in 5s
         const time_t now = std::time(nullptr);
         if (now - conn.hshake_tsamp > 5) {
+            std::cerr << "tunnel timeout on port " << conn.port << "\n";
             epoll::removeFd(this->epfd, *conn.fd);
             this->conns.erase(it);
         } else {
@@ -90,10 +92,13 @@ void Tunnel::poll(const std::function<void(sock::buf<RECV_BUF>&, size_t)>& onDat
         // run through the handshake process
         if (tunnel.state == ConnState::UNCONN) {
             // establish if a single 'Y' byte is received
-            if (nb == 1 && recvbuf[0] == 'Y')
+            if (nb == 1 && recvbuf[0] == 'Y') {
+                std::cerr << "tunnel established on port " << tunnel.port << "\n";
                 tunnel.state = ConnState::VALID;
-            else
+            } else {
+                std::cerr << "tunnel cancelled on port " << tunnel.port << "\n";
                 tunnel.state = ConnState::INVALID; // mark as invalid
+            }
 
             continue; // skip further processing until established
         }

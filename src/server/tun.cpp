@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <iostream>
 #include <utility>
 #include <vector>
 
@@ -54,8 +55,12 @@ void Tunnel::poll(const std::function<void(sock::buf<RECV_BUF>&, size_t)>& onDat
         if (!conn.established) {
             // establish if source ip is valid
             // and a HSLEN-byte packet is received
-            if (std::cmp_equal(nb, HSLEN) && valid)
+            if (std::cmp_equal(nb, HSLEN) && valid) {
+                std::cerr << "tunnel established on port " << ntohs(inaddr.sin_port) << "\n";
                 conn.established = true;
+            } else {
+                std::cerr << "invalid handshake on port " << ntohs(inaddr.sin_port) << "\n";
+            }
 
             // write back 1 if established, else 0
             // to indicate success/failure of handshake
@@ -67,8 +72,10 @@ void Tunnel::poll(const std::function<void(sock::buf<RECV_BUF>&, size_t)>& onDat
 
         // drop invalid packets
         // FIXME: this should be handled better
-        if (!valid)
+        if (!valid) {
+            std::cerr << "dropping invalid packet on port " << ntohs(inaddr.sin_port) << "\n";
             continue;
+        }
 
         onData(recvbuf, static_cast<size_t>(nb));
     }
