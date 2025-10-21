@@ -1,24 +1,22 @@
 #pragma once
 
-#include "own.hpp"
+#include <cstdint>
 
-#include <array>
-#include <cstddef>
-
+#include <memory>
 #include <sys/epoll.h>
 
 namespace epoll {
-    /// create an epoll fd
-    own::owned_fd createEpollFd();
-    /// add file descriptor to epoll instance
-    void addFd(own::owned_fd& epoll_fd, int fd);
-    /// remove file descriptor from epoll instance
-    void removeFd(own::owned_fd& epoll_fd, int fd);
-    /// unsafe: poll epoll instance for events
-    size_t poll(own::owned_fd& epoll_fd, struct epoll_event* events, size_t max_events);
-    /// poll epoll instance for events
-    template<size_t N>
-    size_t poll(own::owned_fd& epoll_fd, std::array<struct epoll_event, N>& events) {
-        return poll(epoll_fd, events.data(), events.size());
-    }
+    /// mediocre performance object-oriented epoll wrapper
+    class EPoll {
+    public:
+        /// create an epoll instance
+        EPoll();
+
+        /// add file descriptor to epoll instance. automatically removed on close.
+        void add(int fd, const std::unique_ptr<uint32_t>& event_flag, uint32_t events = EPOLLIN) const;
+        /// poll epoll instance for events.
+        void poll(int timeout_ms = -1) const;
+    private:
+        std::shared_ptr<int> epfd;
+    };
 }

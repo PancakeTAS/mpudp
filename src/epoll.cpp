@@ -1,38 +1,51 @@
 #include "epoll.hpp"
-#include "own.hpp"
 
+#include <array>
 #include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <utility>
 
 #include <sys/epoll.h>
+#include <unistd.h>
 
-own::owned_fd epoll::createEpollFd() {
-    const int efd = epoll_create1(0);
-    if (efd < 0)
+using namespace epoll;
+
+EPoll::EPoll() {
+    const int epfd = epoll_create1(0);
+    if (epfd < 0)
         throw "epoll_create1() failed";
 
-    own::owned_fd fd{new int(efd)};
-    return fd;
+    this->epfd = std::shared_ptr<int>(
+        new int(epfd),
+        [](const int* epfd) {
+            close(*epfd);
+            delete epfd;
+        });
 }
 
-void epoll::addFd(own::owned_fd& epoll_fd, int fd) {
+void EPoll::add(int fd, const std::unique_ptr<uint32_t>& event_flag, uint32_t events) const {
     struct epoll_event event{
-        .events = EPOLLIN,
+        .events = events,
         .data = {
-            .fd = fd,
+            .ptr = event_flag.get()
         },
     };
-    if (epoll_ctl(*epoll_fd, EPOLL_CTL_ADD, fd, &event) < 0)
+    if (epoll_ctl(*this->epfd, EPOLL_CTL_ADD, fd, &event) < 0)
         throw "epoll_ctl() failed";
+
+    *event_flag = 0;
 }
 
-void epoll::removeFd(own::owned_fd& epoll_fd, int fd) {
-    if (epoll_ctl(*epoll_fd, EPOLL_CTL_DEL, fd, nullptr) < 0)
-        throw "epoll_ctl() failed";
-}
+void EPoll::poll(int timeout_ms) const {
+    std::array<struct epoll_event, EPOLL_MAXEVENTS> events{};
 
-size_t epoll::poll(own::owned_fd& epoll_fd, struct epoll_event* events, size_t max_events) {
-    const int n = epoll_wait(*epoll_fd, events, static_cast<int>(max_events), 500);
+    const int n = epoll_wait(*this->epfd, events.data(), EPOLL_MAXEVENTS, timeout_ms);
     if (n < 0)
         throw "epoll_wait() failed";
-    return static_cast<size_t>(n);
+
+    for (size_t i = 0; std::cmp_less(i, n); i++) {
+        auto* ev = &events.at(i);
+        *static_cast<uint32_t*>(ev->data.ptr) = ev->events;
+    }
 }

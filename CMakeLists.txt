@@ -4,6 +4,8 @@ set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_CLANG_TIDY clang-tidy)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+add_compile_definitions(EPOLL_MAXEVENTS=8)
+
 project(mpudp
     DESCRIPTION "Multiport UDP"
     LANGUAGES CXX)

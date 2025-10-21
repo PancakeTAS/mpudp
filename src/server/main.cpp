@@ -1,4 +1,5 @@
 #include "constants.hpp"
+#include "epoll.hpp"
 #include "server/tun.hpp"
 #include "sock.hpp"
 
@@ -12,12 +13,15 @@ namespace {
         std::cerr << "recv " << len << " bytes\n";
     }
     [[noreturn]] void try_main() {
-        tun::Tunnel tun{{
+        epoll::EPoll epoll{};
+        tun::Tunnel tun{epoll, {
             { 5000, sock::ipFromString("127.0.0.1") },
         }};
 
-        while (true)
+        while (true) {
+            epoll.poll(1000);
             tun.poll(handle_data);
+        }
     }
 }
 

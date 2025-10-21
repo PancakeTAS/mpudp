@@ -1,6 +1,7 @@
 #pragma once
 
 #include "constants.hpp"
+#include "epoll.hpp"
 #include "own.hpp"
 #include "sock.hpp"
 
@@ -8,8 +9,8 @@
 #include <cstdint>
 #include <ctime>
 #include <functional>
-#include <unordered_map>
 
+#include <memory>
 #include <netinet/in.h>
 
 namespace tun {
@@ -28,6 +29,8 @@ namespace tun {
 
         time_t hshake_tsamp{}; //!< timestamp of handshake attempt
         ConnState state{ConnState::UNCONN};
+
+        std::unique_ptr<uint32_t> event_flag; //!< set by epoll
     };
 
     /// tunnel instance acting on a set of connections
@@ -37,19 +40,17 @@ namespace tun {
         Tunnel(in_addr_t remote);
 
         /// validate or (re)-add a connection to the tunnel
-        void validateConnection(uint16_t port);
+        void validateConnection(epoll::EPoll& epoll, uint16_t port);
         /// poll all connections for incoming data
         void poll(const std::function<void(sock::buf<RECV_BUF>&, size_t)>& onData);
         /// send data to the next connection in round-robin fashion
         void write(const sock::buf<SEND_BUF>& buf, size_t n);
     private:
-        own::owned_fd epfd;
         sock::buf<RECV_BUF> recvbuf{};
 
         in_addr_t remote{};
 
-        std::unordered_map<int, Connection> conns;
-        std::vector<Connection*> conns_;
+        std::vector<Connection> conns;
 
         size_t rridx{0}; //!< round-robin index
     };
