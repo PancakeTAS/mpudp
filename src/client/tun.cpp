@@ -35,16 +35,17 @@ void Tunnel::validateConnection(uint16_t port) {
         if (conn.state == ConnState::VALID) // skip established tunnels
             return;
 
-        if (conn.state == ConnState::INVALID) {
-            epoll::removeFd(this->epfd, *conn.fd);
-            this->conns.erase(it);
-        }
-
-        // remove tunnels which haven't established in 5s
+        // remove any tunnel which was explicitly marked as invalid
+        // or hasn't established in 5s
         const time_t now = std::time(nullptr);
-        if (now - conn.hshake_tsamp > 5) {
-            std::cerr << "tunnel timeout on port " << conn.port << "\n";
+        if (conn.state == ConnState::INVALID || now - conn.hshake_tsamp > 5) {
+            if (now - conn.hshake_tsamp > 5) // kind of redundant check, but whatever
+                std::cerr << "tunnel timeout on port " << conn.port << "\n";
+
             epoll::removeFd(this->epfd, *conn.fd);
+            auto it_ = std::ranges::find(this->conns_, &it->second);
+            if (it_ != conns_.end())
+                conns_.erase(it_);
             this->conns.erase(it);
         } else {
             return; // still waiting
@@ -69,7 +70,8 @@ void Tunnel::validateConnection(uint16_t port) {
     sock::write(*conn.fd, handshake, HSLEN, inaddr);
 
     epoll::addFd(this->epfd, *conn.fd);
-    this->conns[*conn.fd] = std::move(conn);
+    const auto& entry = this->conns.emplace(*conn.fd, std::move(conn));
+    this->conns_.push_back(&entry.first->second);
 }
 
 void Tunnel::poll(const std::function<void(sock::buf<RECV_BUF>&, size_t)>& onData) {
@@ -105,5 +107,19 @@ void Tunnel::poll(const std::function<void(sock::buf<RECV_BUF>&, size_t)>& onDat
 
         onData(recvbuf, static_cast<size_t>(nb));
     }
+}
 
+void Tunnel::write(const sock::buf<SEND_BUF>& buf, size_t n) {
+    if (this->conns_.empty())
+        throw "no tunnel connections available";
+
+    this->rridx = (this->rridx + 1) % this->conns_.size();
+
+    const auto& conn = this->conns_.at(this->rridx);
+    const struct sockaddr_in addr{
+        .sin_family = AF_INET,
+        .sin_port = htons(conn->port),
+        .sin_addr = { .s_addr = this->remote },
+    };
+    sock::write(*conn->fd, buf, n, addr);
 }

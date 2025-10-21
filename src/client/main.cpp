@@ -3,6 +3,7 @@
 #include "sock.hpp"
 
 #include <cerrno>
+#include <chrono>
 #include <cstring>
 #include <ctime>
 #include <iostream>
@@ -15,13 +16,22 @@ namespace {
     [[noreturn]] void try_main() {
         tun::Tunnel tun{sock::ipFromString("127.0.0.1")};
 
+        const sock::buf<tun::SEND_BUF> sendbuf{};
+        auto last = std::chrono::steady_clock::now();
         while (true) {
             tun.validateConnection(5000);
 
             tun.poll(handle_data);
+
+            auto now = std::chrono::steady_clock::now();
+            if (std::chrono::duration_cast<std::chrono::seconds>(now - last).count() >= 1) {
+                tun.write(sendbuf, 20);
+                last = now;
+            }
         }
     }
 }
+
 
 int main() {
     try {

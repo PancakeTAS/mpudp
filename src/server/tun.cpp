@@ -29,7 +29,8 @@ Tunnel::Tunnel(const std::vector<std::pair<uint16_t, in_addr_t>>& conns) {
         };
 
         epoll::addFd(this->epfd, *conn.fd);
-        this->conns.emplace(*conn.fd, std::move(conn));
+        const auto& entry = this->conns.emplace(*conn.fd, std::move(conn));
+        this->conns_.push_back(&entry.first->second);
     }
 }
 
@@ -58,6 +59,7 @@ void Tunnel::poll(const std::function<void(sock::buf<RECV_BUF>&, size_t)>& onDat
             if (std::cmp_equal(nb, HSLEN) && valid) {
                 std::cerr << "tunnel established on port " << ntohs(inaddr.sin_port) << "\n";
                 conn.established = true;
+                conn.addr = inaddr;
             } else {
                 std::cerr << "invalid handshake on port " << ntohs(inaddr.sin_port) << "\n";
             }
@@ -79,4 +81,14 @@ void Tunnel::poll(const std::function<void(sock::buf<RECV_BUF>&, size_t)>& onDat
 
         onData(recvbuf, static_cast<size_t>(nb));
     }
+}
+
+void Tunnel::write(const sock::buf<SEND_BUF>& buf, size_t n) {
+    if (this->conns_.empty())
+        throw "no tunnel connections available";
+
+    this->rridx = (this->rridx + 1) % this->conns_.size();
+
+    const auto& conn = this->conns_.at(this->rridx);
+    sock::write(*conn->fd, buf, n, conn->addr);
 }
