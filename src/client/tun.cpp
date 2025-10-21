@@ -44,6 +44,8 @@ void Tunnel::validateConnection(uint16_t port) {
         if (now - conn.hshake_tsamp > 5) {
             epoll::removeFd(this->epfd, *conn.fd);
             this->conns.erase(it);
+        } else {
+            return; // still waiting
         }
     }
 
