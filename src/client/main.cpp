@@ -1,35 +1,59 @@
 #include "client/tun.hpp"
 #include "constants.hpp"
 #include "epoll.hpp"
+#include "own.hpp"
 #include "sock.hpp"
 
 #include <cerrno>
-#include <chrono>
+#include <cstdint>
 #include <cstring>
 #include <ctime>
 #include <iostream>
+#include <memory>
 #include <string>
 
+#include <netinet/in.h>
+#include <sys/types.h>
+
 namespace {
-    void handle_data(sock::buf<tun::RECV_BUF>& data, size_t len) {
-        std::cerr << "recv " << len << " bytes\n";
-    }
+    // void handle_data(sock::buf<tun::RECV_BUF>& data, size_t len) {
+    //     std::cerr << "recv " << len << " bytes\n";
+    // }
     [[noreturn]] void try_main() {
         epoll::EPoll epoll{};
-        tun::Tunnel tun{sock::ipFromString("127.0.0.1")};
 
-        const sock::buf<tun::SEND_BUF> sendbuf{};
-        auto last = std::chrono::steady_clock::now();
+        tun::Tunnel tun{
+            sock::ipFromString("136.243.2.114")
+        };
+
+        const own::owned_fd incoming_sock = sock::openBoundDgramSocket(51280);
+        const int fd = *incoming_sock;
+
+        sock::buf<tun::SEND_BUF> sendbuf{};
+        std::unique_ptr<uint32_t> incoming_data = std::make_unique<uint32_t>(0);
+        epoll.add(fd, incoming_data);
+
+        struct sockaddr_in addr{};
+
         while (true) {
             tun.validateConnection(epoll, 5000);
+            tun.validateConnection(epoll, 5001);
+            tun.validateConnection(epoll, 5002);
+            tun.validateConnection(epoll, 5003);
+            tun.validateConnection(epoll, 5004);
+            tun.validateConnection(epoll, 5005);
+
 
             epoll.poll(1000);
-            tun.poll(handle_data);
+            tun.poll([fd=fd,paddr=&addr](sock::buf<tun::RECV_BUF>& data, size_t len) {
+                sock::write(fd, data, len, *paddr);
+            });
 
-            auto now = std::chrono::steady_clock::now();
-            if (std::chrono::duration_cast<std::chrono::seconds>(now - last).count() >= 1) {
-                tun.write(sendbuf, 20);
-                last = now;
+            if (*incoming_data & EPOLLIN) {
+                *incoming_data = 0;
+
+                const ssize_t n = sock::read(fd, sendbuf, addr);
+                tun.write(sendbuf, static_cast<size_t>(n));
             }
         }
     }

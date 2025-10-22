@@ -10,6 +10,7 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <unistd.h>
 #include <utility>
 
 #include <netinet/in.h>
@@ -40,6 +41,7 @@ void Tunnel::validateConnection(epoll::EPoll& epoll, uint16_t port) {
                 std::cerr << "tunnel timeout on port " << conn->port << "\n";
 
             this->conns.erase(conn);
+            usleep(500000);
         } else {
             return; // still waiting
         }
