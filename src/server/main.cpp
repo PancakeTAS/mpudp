@@ -21,11 +21,7 @@ namespace {
 
         tun::Tunnel tun{epoll, {
             { 5000, sock::ipFromString("80.151.97.24") },
-            { 5001, sock::ipFromString("93.229.85.103") },
-            { 5002, sock::ipFromString("80.151.97.24") },
-            { 5003, sock::ipFromString("93.229.85.103") },
-            { 5004, sock::ipFromString("80.151.97.24") },
-            { 5005, sock::ipFromString("93.229.85.103") },
+            { 5001, sock::ipFromString("93.229.85.103") }
         }};
 
         const own::owned_fd outgoing_sock = sock::openDgramSocket();

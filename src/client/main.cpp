@@ -38,10 +38,6 @@ namespace {
         while (true) {
             tun.validateConnection(epoll, 5000);
             tun.validateConnection(epoll, 5001);
-            tun.validateConnection(epoll, 5002);
-            tun.validateConnection(epoll, 5003);
-            tun.validateConnection(epoll, 5004);
-            tun.validateConnection(epoll, 5005);
 
 
             epoll.poll(1000);
