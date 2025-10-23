@@ -1,0 +1,60 @@
+#pragma once
+
+#include "sock.hpp"
+
+#include <cstddef>
+#include <cstdint>
+#include <optional>
+
+#include <netinet/in.h>
+
+namespace sock::udp {
+
+    /// simple udp socket wrapper
+    class UdpSocket {
+    public:
+        /// create a new udp socket
+        /// @throws sock_error on failure
+        UdpSocket();
+
+        /// create a bound udp socket
+        /// @param port the port to bind to
+        /// @throws sock_error on failure
+        UdpSocket(uint16_t port);
+
+        /// receive data from the socket
+        /// @param buf the buffer to receive data into
+        /// @param len optionally the number of bytes to receive
+        /// @param addr optionally the address to receive from
+        /// @return the number of bytes received
+        /// @throws sock_error on failure
+        template<size_t N>
+        size_t recv(buf<N>& buf, std::optional<size_t> len = std::nullopt,
+                sockaddr_in* addr = nullptr) const {
+            return recv(buf.data(), len.value_or(N), addr);
+        }
+
+        /// write data to the socket
+        /// @param buf the buffer to send data from
+        /// @param len the number of bytes to send
+        /// @param addr the address to send to
+        /// @throws sock_error on failure
+        template<size_t N>
+        void send(const buf<N>& buf, size_t len, const sockaddr_in& addr) const {
+            send(buf.data(), len, addr);
+        }
+
+        // non-copyable and non-movable
+        UdpSocket(const UdpSocket&) = delete;
+        UdpSocket& operator=(const UdpSocket&) = delete;
+        UdpSocket(UdpSocket&&) = delete;
+        UdpSocket& operator=(UdpSocket&&) = delete;
+        ~UdpSocket();
+    private:
+        int fd;
+
+        size_t recv(char* buf, size_t len, sockaddr_in* addr) const;
+        void send(const char* buf, size_t len, const sockaddr_in& addr) const;
+    };
+
+}
