@@ -9,6 +9,7 @@ project(mpudp
     LANGUAGES CXX)
 
 set(SOURCES
+    "src/epoll.cpp"
     "src/main.cpp")
 
 add_executable(mpudp ${SOURCES})
