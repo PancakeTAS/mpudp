@@ -6,11 +6,38 @@
 #include <stdexcept>
 
 #include <netinet/in.h>
+#include <unistd.h>
 
 namespace sock {
 
     template <size_t N>
-    using buf = std::array<char, N>; //!< buffer type alias
+    using buf = std::array<char, N>; //!< char buffer
+
+    /// fd wrapper
+    class Fd {
+    public:
+        /// default constructor
+        Fd() = default;
+
+        /// update the fd
+        void set(int nfd) {
+            if (this->fd != -1)
+                close(fd);
+            this->fd = nfd;
+        }
+
+        /// get the underlying fd
+        operator int() const { return this->fd; }
+
+        /// non-copyable, non-movable
+        Fd(const Fd&) = delete;
+        Fd& operator=(const Fd&) = delete;
+        Fd(Fd&&) = delete;
+        Fd& operator=(Fd&&) = delete;
+        virtual ~Fd();
+    private:
+        int fd{-1};
+    };
 
     /// convert a string ipv4 address to a in_addr_t
     /// @param straddr the string ipv4 address

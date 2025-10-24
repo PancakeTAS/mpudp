@@ -1,5 +1,7 @@
 #include "epoll.hpp"
 
+#include "../sock/sock.hpp"
+
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -11,19 +13,21 @@
 
 using namespace epoll;
 
+EventHandler::~EventHandler() = default;
+
 Epoll::Epoll() : epfd(epoll_create1(0)) {
     if (this->epfd < 0)
         throw epoll_error("epoll_create1() failed");
 }
 
-void Epoll::add(int fd, std::shared_ptr<EventHandler> handler, uint32_t events) {
+void Epoll::add(std::shared_ptr<sock::Fd> fd, std::shared_ptr<EventHandler> handler, uint32_t events) {
     auto* user = new EpollData {
-        .fd = fd,
+        .fd = std::move(fd),
         .handler = std::move(handler)
     };
 
     // insert into map or throw if already exists
-    auto entry = this->fds.emplace(fd, user);
+    auto entry = this->fds.emplace(*user->fd, user);
     if (!entry.second) {
         delete user;
 
@@ -35,7 +39,7 @@ void Epoll::add(int fd, std::shared_ptr<EventHandler> handler, uint32_t events) 
         .events = events,
         .data = { .ptr = user }
     };
-    if (epoll_ctl(this->epfd, EPOLL_CTL_ADD, fd, &ev) < 0) {
+    if (epoll_ctl(this->epfd, EPOLL_CTL_ADD, *user->fd, &ev) < 0) {
         this->fds.erase(entry.first);
         delete user;
 
@@ -43,7 +47,7 @@ void Epoll::add(int fd, std::shared_ptr<EventHandler> handler, uint32_t events) 
     }
 }
 
-void Epoll::modify(int fd, std::shared_ptr<EventHandler> handler, uint32_t events) {
+void Epoll::modify(const sock::Fd& fd, std::shared_ptr<EventHandler> handler, uint32_t events) {
     // find in map or throw if not found
     auto entry = this->fds.find(fd);
     if (entry == this->fds.end())
@@ -62,7 +66,7 @@ void Epoll::modify(int fd, std::shared_ptr<EventHandler> handler, uint32_t event
     user->handler = std::move(handler);
 }
 
-void Epoll::remove(int fd) {
+void Epoll::remove(const sock::Fd& fd) {
     // remove from map or throw if not found
     auto entry = this->fds.find(fd);
     if (entry == this->fds.end())

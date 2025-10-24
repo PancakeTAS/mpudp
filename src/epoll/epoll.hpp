@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../sock/sock.hpp"
+
 #include <array>
 #include <cerrno>
 #include <cstdint>
@@ -16,17 +18,20 @@ namespace epoll {
     /// abstract base class for handling events
     class EventHandler {
     public:
+        /// default constructor
+        EventHandler() = default;
+
         /// called when an event occurs on the file descriptor
         /// @param fd the file descriptor on which the event occurred
         /// @param events the events that occurred (bitmask of EPOLLIN, EPOLLOUT, etc.)
-        virtual void onEvent(int fd, uint32_t events) = 0;
+        virtual void onEvent(std::shared_ptr<sock::Fd>& fd, uint32_t events) = 0;
 
         // non-copyable and non-movable
         EventHandler(const EventHandler&) = delete;
         EventHandler& operator=(const EventHandler&) = delete;
         EventHandler(EventHandler&&) = delete;
         EventHandler& operator=(EventHandler&&) = delete;
-        virtual ~EventHandler() = default;
+        virtual ~EventHandler();
     };
 
     /// zero-overhead epoll wrapper (not thread-safe)
@@ -41,19 +46,19 @@ namespace epoll {
         /// @param handler the event handler to associate
         /// @param events the events to monitor (default: EPOLLIN)
         /// @throws epoll_error on failure
-        void add(int fd, std::shared_ptr<EventHandler> handler, uint32_t events = EPOLLIN);
+        void add(std::shared_ptr<sock::Fd> fd, std::shared_ptr<EventHandler> handler, uint32_t events);
 
         /// modify a file descriptor
         /// @param fd the file descriptor to modify
         /// @param handler the new event handler to associate
         /// @param events the new events to monitor
         /// @throws epoll_error on failure
-        void modify(int fd, std::shared_ptr<EventHandler> handler, uint32_t events);
+        void modify(const sock::Fd& fd, std::shared_ptr<EventHandler> handler, uint32_t events);
 
         /// remove a file descriptor
         /// @param fd the file descriptor to remove
         /// @throws epoll_error on failure
-        void remove(int fd);
+        void remove(const sock::Fd& fd);
 
         /// poll for events
         /// @param timeout the timeout in milliseconds (-1 for infinite)
@@ -74,7 +79,7 @@ namespace epoll {
         int epfd;
 
         struct EpollData {
-            int fd;
+            std::shared_ptr<sock::Fd> fd;
             std::shared_ptr<EventHandler> handler;
         };
         std::unordered_map<int, EpollData*> fds;
