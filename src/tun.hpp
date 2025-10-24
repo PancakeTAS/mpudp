@@ -77,9 +77,10 @@ namespace tun {
     public:
         /// create a tunnel
         /// @param peer peer address
+        /// @param on_data callback for data events
         /// @param bport base port
         /// @param ports number of ports
-        Tunnel(in_addr_t peer, DataCallback on_data,
+        Tunnel(DataCallback on_data, in_addr_t peer,
             uint16_t bport, uint16_t ports);
 
         /// check and potentially update a connection

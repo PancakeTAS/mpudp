@@ -10,10 +10,13 @@ project(mpudp
 
 set(SOURCES
     "src/epoll/epoll.cpp"
+    "src/server/endpoint.cpp"
     "src/sock/sock.cpp"
     "src/sock/udp.cpp"
-    "src/tun.cpp"
-    "src/main.cpp")
+    "src/client.cpp"
+    "src/main.cpp"
+    "src/server.cpp"
+    "src/tun.cpp")
 
 add_executable(mpudp ${SOURCES})
 

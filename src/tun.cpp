@@ -6,6 +6,7 @@
 #include <ctime>
 #include <iostream>
 #include <memory>
+#include <stdexcept>
 #include <utility>
 
 #include <netinet/in.h>
@@ -46,7 +47,7 @@ void TunnelHandler::onEvent(std::shared_ptr<sock::Fd>& fd, uint32_t events) {
     this->on_data(recvbuf, len);
 }
 
-Tunnel::Tunnel(in_addr_t peer, DataCallback on_data, uint16_t bport, uint16_t ports)
+Tunnel::Tunnel(DataCallback on_data, in_addr_t peer, uint16_t bport, uint16_t ports)
         : peer(peer), bport(bport) {
     this->conns.resize(ports);
     this->handler = std::make_shared<TunnelHandler>(std::move(on_data));
