@@ -11,7 +11,7 @@
 namespace sock::udp {
 
     /// simple udp socket wrapper
-    class UdpSocket {
+    class UdpSocket : public Fd {
     public:
         /// create a new udp socket
         /// @throws sock_error on failure
@@ -43,18 +43,11 @@ namespace sock::udp {
         void send(const buf<N>& buf, size_t len, const sockaddr_in& addr) const {
             send(buf.data(), len, addr);
         }
-
-        // non-copyable and non-movable
-        UdpSocket(const UdpSocket&) = delete;
-        UdpSocket& operator=(const UdpSocket&) = delete;
-        UdpSocket(UdpSocket&&) = delete;
-        UdpSocket& operator=(UdpSocket&&) = delete;
-        ~UdpSocket();
     private:
-        int fd;
-
         size_t recv(char* buf, size_t len, sockaddr_in* addr) const;
         void send(const char* buf, size_t len, const sockaddr_in& addr) const;
+
+        virtual void noop(); // vtable anchor
     };
 
 }
