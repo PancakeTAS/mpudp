@@ -9,7 +9,10 @@ project(mpudp
     LANGUAGES CXX)
 
 set(SOURCES
-    "src/epoll.cpp"
+    "src/epoll/epoll.cpp"
+    "src/sock/sock.cpp"
+    "src/sock/udp.cpp"
+    "src/tun.cpp"
     "src/main.cpp")
 
 add_executable(mpudp ${SOURCES})
@@ -30,4 +33,5 @@ target_compile_options(mpudp PRIVATE
     -Wno-shadow
     -Wno-switch-enum
     -Wno-switch-default
-    -Wno-padded)
+    -Wno-padded
+    -Wno-unsafe-buffer-usage-in-container)
