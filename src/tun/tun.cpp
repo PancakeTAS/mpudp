@@ -52,8 +52,14 @@ void TunnelHandler::onEvent(std::shared_ptr<sock::Fd>& fd, uint32_t events) {
 Tunnel::Tunnel(DataCallback on_data, in_addr_t peer,
             uint16_t baseport, const std::vector<config::ClientConnectionConfig>& connections)
         : peer(peer), baseport(baseport) {
-    this->conns.resize(connections.size());
     this->handler = std::make_shared<TunnelHandler>(std::move(on_data));
+    this->conns.resize(connections.size());
+
+    std::vector<uint32_t> weights;
+    weights.reserve(connections.size());
+    for (const auto& conn : connections)
+        weights.push_back(conn.weight);
+    this->wrr = wrr::Selector(weights);
 }
 
 void Tunnel::checkConnection(epoll::Epoll& epoll, uint16_t idx) {
@@ -102,12 +108,12 @@ void Tunnel::write(const sock::buf<RECVBUF>& buf, size_t len) {
     if (this->conns.empty())
         throw std::runtime_error("no tunnel connections available");
 
-    this->rr_idx = (this->rr_idx + 1) % this->conns.size();
-    const auto& conn = this->conns.at(this->rr_idx);
+    const auto next = static_cast<size_t>(this->wrr.next());
+    const auto& conn = this->conns.at(next);
 
     const sockaddr_in addr{
         .sin_family = AF_INET,
-        .sin_port = htons(this->baseport + this->rr_idx),
+        .sin_port = htons(static_cast<uint16_t>(this->baseport + next)),
         .sin_addr = in_addr { .s_addr = this->peer },
     };
     conn->send(buf, len, addr);

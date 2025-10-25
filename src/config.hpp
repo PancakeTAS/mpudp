@@ -10,7 +10,7 @@
 namespace config {
     /// client connection element [[client.connection]]
     struct ClientConnectionConfig {
-        bool active{}; //!< PLACEHOLDER, DO NOT USE
+        uint32_t weight{}; //!< weight for weighted distribution
     };
 
     /// client configuration element [client]
@@ -24,6 +24,7 @@ namespace config {
     /// server connection element [[server.connection]]
     struct ServerConnectionConfig {
         in_addr_t peer{}; //!< client address expected on this connection
+        uint32_t weight{}; //!< weight for weighted distribution
     };
 
     /// server configuration element [server]

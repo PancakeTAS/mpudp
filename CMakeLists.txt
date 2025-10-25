@@ -10,6 +10,7 @@ project(mpudp
 
 set(SOURCES
     "src/epoll/epoll.cpp"
+    "src/selection/wrr.cpp"
     "src/tun/endpoint.cpp"
     "src/tun/tun.cpp"
     "src/sock/sock.cpp"

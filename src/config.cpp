@@ -20,6 +20,15 @@ namespace {
             throw std::runtime_error("Missing or invalid key: " + key);
         return value.ref<T>();
     }
+
+    uint32_t gcd(uint32_t a, uint32_t b) { // helper for gcd
+        while (b != 0) {
+            const uint32_t temp = b;
+            b = a % b;
+            a = temp;
+        }
+        return a;
+    }
 }
 
 std::variant<ClientConfig, ServerConfig> config::parse(const std::string& filename) {
@@ -47,17 +56,24 @@ std::variant<ClientConfig, ServerConfig> config::parse(const std::string& filena
             const auto tconnt = *tconn.as_table();
 
             const ClientConnectionConfig cconn{
-                .active = get<bool>(tconnt, "active"),
+                .weight = static_cast<uint32_t>(get<int64_t>(tconnt, "weight")),
             };
             conns.push_back(cconn);
         }
+
+        // normalize weights by GCD
+        uint32_t div{};
+        for (const auto& cconn : conns)
+            div = gcd(div, cconn.weight);
+        for (auto& cconn : conns)
+            cconn.weight /= div;
 
         // finally, construct the client config
         return ClientConfig {
             .peer = sock::stoia(get<std::string>(tclient, "peer")),
             .baseport = static_cast<uint16_t>(get<int64_t>(tclient, "baseport")),
             .listenport = static_cast<uint16_t>(get<int64_t>(tclient, "listenport")),
-            .connections = std::move(conns),
+            .connections = std::move(conns)
         };
     } // else parse server config
 
@@ -77,14 +93,22 @@ std::variant<ClientConfig, ServerConfig> config::parse(const std::string& filena
 
         const ServerConnectionConfig sconn{
             .peer = sock::stoia(get<std::string>(tconnt, "peer")),
+            .weight = static_cast<uint32_t>(get<int64_t>(tconnt, "weight")),
         };
         conns.push_back(sconn);
     }
+
+    // normalize weights by GCD
+    uint32_t div{};
+    for (const auto& sconn : conns)
+        div = gcd(div, sconn.weight);
+    for (auto& sconn : conns)
+        sconn.weight /= div;
 
     // finally, construct the server config
     return ServerConfig {
         .baseport = static_cast<uint16_t>(get<int64_t>(tserver, "baseport")),
         .sendport = static_cast<uint16_t>(get<int64_t>(tserver, "sendport")),
-        .connections = std::move(conns),
+        .connections = std::move(conns)
     };
 }

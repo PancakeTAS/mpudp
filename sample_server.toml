@@ -2,8 +2,10 @@
 baseport = 5000
 sendport = 51280
 
-[[client.connection]]
+[[server.connection]]
 peer = "1.1.1.1"
+weight = 1
 
-[[client.connection]]
+[[server.connection]]
 peer = "1.1.1.2"
+weight = 1

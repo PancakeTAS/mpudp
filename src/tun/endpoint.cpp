@@ -71,14 +71,19 @@ Endpoint::Endpoint(epoll::Epoll& epoll, DataCallback on_data,
         const auto& conn = this->conns.emplace_back(std::make_shared<Connection>(e.peer, baseport + i));
         epoll.add(conn, this->handler, EPOLLIN);
     }
+
+    std::vector<uint32_t> weights;
+    weights.reserve(connections.size());
+    for (const auto& conn : connections)
+        weights.push_back(conn.weight);
+    this->wrr = wrr::Selector(weights);
 }
 
 void Endpoint::write(const sock::buf<RECVBUF>& buf, size_t len) {
     if (this->conns.empty())
         throw std::runtime_error("no tunnel connections available");
 
-    this->rr_idx = (this->rr_idx + 1) % this->conns.size();
-    const auto& conn = this->conns.at(this->rr_idx);
-
+    const auto next = static_cast<size_t>(this->wrr.next());
+    const auto& conn = this->conns.at(next);
     conn->send(buf, len, conn->addr());
 }

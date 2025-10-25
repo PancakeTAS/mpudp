@@ -4,7 +4,7 @@ listenport = 51280
 baseport = 5000
 
 [[client.connection]]
-active = true
+weight = 1
 
 [[client.connection]]
-active = true
+weight = 1

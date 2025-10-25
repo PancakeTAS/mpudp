@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../epoll/epoll.hpp"
+#include "../selection/wrr.hpp"
 #include "../sock/sock.hpp"
 #include "../sock/udp.hpp"
 #include "../config.hpp"
@@ -99,7 +100,8 @@ namespace tun {
 
         std::vector<std::shared_ptr<Connection>> conns;
         uint16_t baseport{}; //!< lowest port
-        uint16_t rr_idx{}; //!< round-robin index
+
+        wrr::Selector wrr{{}};
     };
 
 
