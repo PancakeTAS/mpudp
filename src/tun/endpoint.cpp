@@ -85,5 +85,5 @@ void Endpoint::write(const sock::buf<RECVBUF>& buf, size_t len) {
 
     const auto next = static_cast<size_t>(this->wrr.next());
     const auto& conn = this->conns.at(next);
-    conn->send(buf, len, conn->addr());
+    if (conn->is_valid()) conn->send(buf, len, conn->addr());
 }

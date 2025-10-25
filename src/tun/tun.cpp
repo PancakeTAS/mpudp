@@ -85,7 +85,7 @@ void Tunnel::checkConnection(epoll::Epoll& epoll, uint16_t idx) {
         epoll.remove(*conn);
         conn.reset();
 
-        usleep(20000); // 20ms
+        usleep(200000); // 200ms
     }
 
     // now recreate the connection...
@@ -110,6 +110,10 @@ void Tunnel::write(const sock::buf<RECVBUF>& buf, size_t len) {
 
     const auto next = static_cast<size_t>(this->wrr.next());
     const auto& conn = this->conns.at(next);
+    if (conn->state() != ConnState::VALID) {
+        std::cerr << "dropping packet due to invalid tunnel on port " << (this->baseport + next) << '\n';
+        return;
+    }
 
     const sockaddr_in addr{
         .sin_family = AF_INET,
