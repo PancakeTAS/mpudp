@@ -57,7 +57,7 @@ namespace {
 
     [[noreturn]] void server_main(const Args& args) {
         try {
-            server::main(args.baseport, args.peers);
+            server::main(args.baseport, args.targetport, args.peers);
         } catch (const std::exception& e) {
             std::cerr << "Error: " << e.what() << '\n';
             exit(EXIT_FAILURE);
