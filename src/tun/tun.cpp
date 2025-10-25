@@ -35,10 +35,10 @@ void TunnelHandler::onEvent(std::shared_ptr<sock::Fd>& fd, uint32_t events) {
     if (conn.state() == ConnState::UNCONN) {
         // establish if a single 'Y' byte is received
         if (len == 1 && recvbuf[0] == 'Y') {
-            std::cerr << "tunnel established on port " << ntohs(addr.sin_port) << '\n';
+            std::cerr << "connection established on port " << ntohs(addr.sin_port) << '\n';
             conn.state(ConnState::VALID);
         } else {
-            std::cerr << "tunnel handshake failed on port " << ntohs(addr.sin_port) << '\n';
+            std::cerr << "connection handshake failed on port " << ntohs(addr.sin_port) << '\n';
             conn.state(ConnState::INVALID);
         }
 
@@ -75,7 +75,7 @@ void Tunnel::checkConnection(epoll::Epoll& epoll, uint16_t idx) {
         if (now - conn->htime() <= 5)
             return; // still waiting
 
-        std::cerr << "tunnel timeout on port " << (this->baseport + idx) << '\n';
+        std::cerr << "connection timeout on port " << (this->baseport + idx) << '\n';
     }
 
     // past this point, connections are invalid.
@@ -111,7 +111,7 @@ void Tunnel::write(const sock::buf<RECVBUF>& buf, size_t len) {
     const auto next = static_cast<size_t>(this->wrr.next());
     const auto& conn = this->conns.at(next);
     if (conn->state() != ConnState::VALID) {
-        std::cerr << "dropping packet due to invalid tunnel on port " << (this->baseport + next) << '\n';
+        std::cerr << "dropping packet due to invalid connection on port " << (this->baseport + next) << '\n';
         return;
     }
 
