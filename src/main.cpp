@@ -20,6 +20,7 @@ namespace {
 
     struct Args {
         Mode mode{Mode::CLIENT};
+        uint16_t targetport{51280};
         uint16_t baseport{5000};
         uint16_t count{1}; // client only
         in_addr_t peer{}; // client only
@@ -27,14 +28,15 @@ namespace {
     };
 
     void print_usage(const std::string& prog) {
-        std::cerr << "Usage: " << prog << " -c -b <baseport> -l <count> <peer>\n"
-            << "or: " << prog << " -s -b <baseport> -p <peer1> -p <peer2> ...\n"
+        std::cerr << "Usage: " << prog << " -c -b <baseport> -t <incoming port> -l <count> <peer>\n"
+            << "or: " << prog << " -s -b <baseport> -t <outgoing port> -p <peer1> -p <peer2> ...\n"
             << "Open a multiport UDP tunnel to a peer, or listen for incoming connections from a list of peers.\n\n"
             << "Each peer will be opened on a separate port incrementally.\n\n"
             << "Options:\n"
             << "  -c                Client mode: Open a tunnel to a peer\n"
             << "  -s                Server mode: Listen for incoming connections from peers\n"
             << "  -b <baseport>     Base port number (default: 5000)\n"
+            << "  -t <targetport>   Port to (server) write data to or (client) read data from\n"
             << "  -l <count>        Client only: Number of ports to use when connecting (default: 1)\n"
             << "  -p <peer>         Server only: Peer address to listen for (can be specified multiple times)\n\n"
             << "Examples:\n"
@@ -46,7 +48,7 @@ namespace {
 
     [[noreturn]] void client_main(const Args& args) {
         try {
-            client::main(args.baseport, args.count, args.peer);
+            client::main(args.baseport, args.count, args.targetport, args.peer);
         } catch (const std::exception& e) {
             std::cerr << "Error: " << e.what() << '\n';
             exit(EXIT_FAILURE);
@@ -68,7 +70,7 @@ int main(int argc, char* argv[]) {
 
     // parse arguments
     int opt{};
-    while ((opt = getopt(argc, argv, "csb:l:p:")) != -1) {
+    while ((opt = getopt(argc, argv, "csb:t:l:p:")) != -1) {
         switch (opt) {
             case 'c':
                 args.mode = Mode::CLIENT;
@@ -83,6 +85,14 @@ int main(int argc, char* argv[]) {
                 }
 
                 args.baseport = static_cast<uint16_t>(std::stoi(optarg));
+                break;
+            case 't':
+                if (std::stoi(optarg) < 1) {
+                    print_usage(*argv);
+                    return EXIT_FAILURE;
+                }
+
+                args.targetport = static_cast<uint16_t>(std::stoi(optarg));
                 break;
             case 'l':
                 if (std::stoi(optarg) < 1) {
@@ -122,13 +132,15 @@ int main(int argc, char* argv[]) {
         std::cerr << "Opening tunnel to "
             << arguments[static_cast<size_t>(optind)] << " on ports "
             << args.baseport << " to "
-            << (args.baseport + args.count - 1) << '\n';
+            << (args.baseport + args.count - 1) << " with data from "
+            << args.targetport << '\n';
 
         client_main(args);
     } else {
         std::cerr << "Listening for incoming tunnels on ports "
             << args.baseport << " to "
-            << (args.baseport + args.peers.size() - 1) << '\n';
+            << (args.baseport + args.peers.size() - 1) << " and forwarding data to "
+            << args.targetport << '\n';
 
         server_main(args);
     }

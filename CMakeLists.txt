@@ -22,8 +22,7 @@ add_executable(mpudp ${SOURCES})
 
 set_target_properties(mpudp PROPERTIES
     CXX_STANDARD 20
-    CXX_STANDARD_REQUIRED ON)
-set_target_properties(mpudp PROPERTIES
+    CXX_STANDARD_REQUIRED ON
     CXX_VISIBILITY_PRESET hidden
     SKIP_RPATH ON)
 target_compile_options(mpudp PRIVATE

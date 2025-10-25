@@ -44,7 +44,7 @@ namespace epoll {
         /// add a file descriptor
         /// @param fd the file descriptor to add
         /// @param handler the event handler to associate
-        /// @param events the events to monitor (default: EPOLLIN)
+        /// @param events the events to monitor
         /// @throws epoll_error on failure
         void add(std::shared_ptr<sock::Fd> fd, std::shared_ptr<EventHandler> handler, uint32_t events);
 
