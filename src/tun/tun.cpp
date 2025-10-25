@@ -1,6 +1,7 @@
 #include "tun.hpp"
-#include "epoll/epoll.hpp"
-#include "sock/sock.hpp"
+#include "../epoll/epoll.hpp"
+#include "../sock/sock.hpp"
+#include "../config.hpp"
 
 #include <cstdint>
 #include <ctime>
@@ -12,6 +13,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <vector>
 
 using namespace tun;
 
@@ -47,9 +49,10 @@ void TunnelHandler::onEvent(std::shared_ptr<sock::Fd>& fd, uint32_t events) {
     this->on_data(recvbuf, len);
 }
 
-Tunnel::Tunnel(DataCallback on_data, in_addr_t peer, uint16_t bport, uint16_t ports)
-        : peer(peer), bport(bport) {
-    this->conns.resize(ports);
+Tunnel::Tunnel(DataCallback on_data, in_addr_t peer,
+            uint16_t baseport, const std::vector<config::ClientConnectionConfig>& connections)
+        : peer(peer), baseport(baseport) {
+    this->conns.resize(connections.size());
     this->handler = std::make_shared<TunnelHandler>(std::move(on_data));
 }
 
@@ -66,7 +69,7 @@ void Tunnel::checkConnection(epoll::Epoll& epoll, uint16_t idx) {
         if (now - conn->htime() <= 5)
             return; // still waiting
 
-        std::cerr << "tunnel timeout on port " << (this->bport + idx) << '\n';
+        std::cerr << "tunnel timeout on port " << (this->baseport + idx) << '\n';
     }
 
     // past this point, connections are invalid.
@@ -89,7 +92,7 @@ void Tunnel::checkConnection(epoll::Epoll& epoll, uint16_t idx) {
     const sock::buf<5> handshake{};
     const sockaddr_in addr{
         .sin_family = AF_INET,
-        .sin_port = htons(this->bport + idx),
+        .sin_port = htons(this->baseport + idx),
         .sin_addr = in_addr { .s_addr = this->peer },
     };
     conn->send(handshake, 5, addr);
@@ -104,7 +107,7 @@ void Tunnel::write(const sock::buf<RECVBUF>& buf, size_t len) {
 
     const sockaddr_in addr{
         .sin_family = AF_INET,
-        .sin_port = htons(this->bport + this->rr_idx),
+        .sin_port = htons(this->baseport + this->rr_idx),
         .sin_addr = in_addr { .s_addr = this->peer },
     };
     conn->send(buf, len, addr);

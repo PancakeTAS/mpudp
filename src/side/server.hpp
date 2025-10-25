@@ -1,9 +1,10 @@
 #pragma once
 
-#include "epoll/epoll.hpp"
-#include "server/endpoint.hpp"
-#include "sock/sock.hpp"
-#include "sock/udp.hpp"
+#include "../epoll/epoll.hpp"
+#include "../tun/endpoint.hpp"
+#include "../sock/sock.hpp"
+#include "../sock/udp.hpp"
+#include "../config.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -39,10 +40,8 @@ namespace server {
     };
 
     /// server-side main entry point
-    /// @param bport base port number
-    /// @param tport target port number
-    /// @param peers list of peer addresses
+    /// @param config server configuration
     /// @throws std::exception on error
-    [[noreturn]] void main(uint16_t bport, uint16_t tport, const std::vector<in_addr_t>& peers);
+    [[noreturn]] void main(const config::ServerConfig& config);
 
 }

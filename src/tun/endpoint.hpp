@@ -3,6 +3,7 @@
 #include "../epoll/epoll.hpp"
 #include "../sock/sock.hpp"
 #include "../sock/udp.hpp"
+#include "../config.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -77,10 +78,10 @@ namespace endpoint {
         /// create a endpoint
         /// @param epoll epoll instance
         /// @param on_data callback for data events
-        /// @param bport base port
-        /// @param peers expected peer from each port
+        /// @param baseport base port
+        /// @param connections connections configurations
         Endpoint(epoll::Epoll& epoll, DataCallback on_data,
-            uint16_t bport, const std::vector<in_addr_t>& peers);
+            uint16_t baseport, const std::vector<config::ServerConnectionConfig>& connections);
 
         /// write data to the endpoint
         /// @param buf buffer to write

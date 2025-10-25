@@ -1,0 +1,9 @@
+[server]
+baseport = 5000
+sendport = 51280
+
+[[client.connection]]
+peer = "1.1.1.1"
+
+[[client.connection]]
+peer = "1.1.1.2"

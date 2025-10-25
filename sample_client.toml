@@ -1,0 +1,10 @@
+[client]
+peer = "2.2.2.2"
+listenport = 51280
+baseport = 5000
+
+[[client.connection]]
+active = true
+
+[[client.connection]]
+active = true

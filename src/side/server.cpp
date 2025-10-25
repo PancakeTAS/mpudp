@@ -1,13 +1,13 @@
 #include "server.hpp"
-#include "epoll/epoll.hpp"
-#include "server/endpoint.hpp"
-#include "sock/sock.hpp"
+#include "../epoll/epoll.hpp"
+#include "../tun/endpoint.hpp"
+#include "../sock/sock.hpp"
+#include "../config.hpp"
 
 #include <cstddef>
 #include <cstdint>
 
 #include <memory>
-#include <vector>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -26,16 +26,16 @@ namespace {
         sstate->incomingEndpoint.write(buf, len);
     }
 }
-void server::main(uint16_t bport, uint16_t tport, const std::vector<in_addr_t>& peers) {
+void server::main(const config::ServerConfig& config) {
     // initialize server state
     epoll::Epoll epoll{};
     auto s = std::shared_ptr<Server>(new Server { // NOLINT
-        .incomingEndpoint = endpoint::Endpoint(epoll, on_data, bport, peers),
+        .incomingEndpoint = endpoint::Endpoint(epoll, on_data, config.baseport, config.connections),
         .outgoingSocket = sock::udp::UdpSocket(),
         .outgoingHandler = ServerHandler(on_inc_data),
         .saddr = sockaddr_in {
             .sin_family = AF_INET,
-            .sin_port = htons(tport),
+            .sin_port = htons(config.sendport),
             .sin_addr = { .s_addr = sock::stoia("127.0.0.1") }
         }
     });

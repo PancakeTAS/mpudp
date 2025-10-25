@@ -1,8 +1,9 @@
 #include "client.hpp"
-#include "epoll/epoll.hpp"
-#include "sock/udp.hpp"
-#include "tun.hpp"
-#include "sock/sock.hpp"
+#include "../epoll/epoll.hpp"
+#include "../sock/udp.hpp"
+#include "../tun/tun.hpp"
+#include "../sock/sock.hpp"
+#include "../config.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -34,12 +35,12 @@ namespace {
     }
 }
 
-void client::main(uint16_t bport, uint16_t bport_len, uint16_t tport, in_addr_t peer) {
+void client::main(const config::ClientConfig& config) {
     // initialize client state
     auto c = std::shared_ptr<Client>(new Client { // NOLINT
         .epoll = epoll::Epoll{},
-        .outgoingTunnel = tun::Tunnel(on_data, peer, bport, bport_len),
-        .incomingSocket = sock::udp::UdpSocket(tport),
+        .outgoingTunnel = tun::Tunnel(on_data, config.peer, config.baseport, config.connections),
+        .incomingSocket = sock::udp::UdpSocket(config.listenport),
         .incomingHandler = ClientHandler(on_inc_data)
     });
 
@@ -52,8 +53,8 @@ void client::main(uint16_t bport, uint16_t bport_len, uint16_t tport, in_addr_t 
     );
 
     while (true) {
-        for (uint16_t i = 0; i < bport_len; ++i)
-            c->outgoingTunnel.checkConnection(c->epoll, i);
+        for (size_t i = 0; i < config.connections.size(); ++i)
+            c->outgoingTunnel.checkConnection(c->epoll, static_cast<uint16_t>(i));
         c->epoll.poll(1000);
     }
 }

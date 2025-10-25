@@ -1,8 +1,9 @@
 #pragma once
 
-#include "epoll/epoll.hpp"
-#include "sock/sock.hpp"
-#include "sock/udp.hpp"
+#include "../epoll/epoll.hpp"
+#include "../sock/sock.hpp"
+#include "../sock/udp.hpp"
+#include "../config.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -78,10 +79,10 @@ namespace tun {
         /// create a tunnel
         /// @param peer peer address
         /// @param on_data callback for data events
-        /// @param bport base port
-        /// @param ports number of ports
+        /// @param baseport base port
+        /// @param connections connection configurations
         Tunnel(DataCallback on_data, in_addr_t peer,
-            uint16_t bport, uint16_t ports);
+            uint16_t baseport, const std::vector<config::ClientConnectionConfig>& connections);
 
         /// check and potentially update a connection
         /// @param epoll epoll instance
@@ -97,7 +98,7 @@ namespace tun {
         std::shared_ptr<TunnelHandler> handler;
 
         std::vector<std::shared_ptr<Connection>> conns;
-        uint16_t bport{}; //!< lowest port
+        uint16_t baseport{}; //!< lowest port
         uint16_t rr_idx{}; //!< round-robin index
     };
 

@@ -1,9 +1,10 @@
 #pragma once
 
-#include "epoll/epoll.hpp"
-#include "sock/sock.hpp"
-#include "sock/udp.hpp"
-#include "tun.hpp"
+#include "../epoll/epoll.hpp"
+#include "../sock/sock.hpp"
+#include "../sock/udp.hpp"
+#include "../tun/tun.hpp"
+#include "../config.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -41,11 +42,8 @@ namespace client {
     };
 
     /// client-side main entry point
-    /// @param bport base port number
-    /// @param bport_len number of ports to use
-    /// @param tport target port number
-    /// @param peer peer address
+    /// @param config client configuration
     /// @throws std::exception on error
-    [[noreturn]] void main(uint16_t bport, uint16_t bport_len, uint16_t tport, in_addr_t peer);
+    [[noreturn]] void main(const config::ClientConfig& config);
 
 }

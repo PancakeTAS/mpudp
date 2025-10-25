@@ -1,6 +1,7 @@
 #include "endpoint.hpp"
 #include "../epoll/epoll.hpp"
 #include "../sock/sock.hpp"
+#include "../config.hpp"
 
 #include <cstdint>
 #include <ctime>
@@ -60,14 +61,14 @@ void EndpointHandler::onEvent(std::shared_ptr<sock::Fd>& fd, uint32_t events) {
 }
 
 Endpoint::Endpoint(epoll::Epoll& epoll, DataCallback on_data,
-        uint16_t bport, const std::vector<in_addr_t>& peers) {
+        uint16_t baseport, const std::vector<config::ServerConnectionConfig>& connections) {
     this->handler = std::make_shared<EndpointHandler>(std::move(on_data));
 
-    this->conns.reserve(peers.size());
-    for (size_t i = 0; i < peers.size(); ++i) {
-        const auto& peer = peers.at(i);
+    this->conns.reserve(connections.size());
+    for (size_t i = 0; i < connections.size(); ++i) {
+        const auto& e = connections.at(i);
 
-        const auto& conn = this->conns.emplace_back(std::make_shared<Connection>(peer, bport + i));
+        const auto& conn = this->conns.emplace_back(std::make_shared<Connection>(e.peer, baseport + i));
         epoll.add(conn, this->handler, EPOLLIN);
     }
 }

@@ -10,13 +10,14 @@ project(mpudp
 
 set(SOURCES
     "src/epoll/epoll.cpp"
-    "src/server/endpoint.cpp"
+    "src/tun/endpoint.cpp"
+    "src/tun/tun.cpp"
     "src/sock/sock.cpp"
     "src/sock/udp.cpp"
-    "src/client.cpp"
-    "src/main.cpp"
-    "src/server.cpp"
-    "src/tun.cpp")
+    "src/side/client.cpp"
+    "src/side/server.cpp"
+    "src/config.cpp"
+    "src/main.cpp")
 
 add_executable(mpudp ${SOURCES})
 
@@ -25,6 +26,8 @@ set_target_properties(mpudp PROPERTIES
     CXX_STANDARD_REQUIRED ON
     CXX_VISIBILITY_PRESET hidden
     SKIP_RPATH ON)
+target_include_directories(mpudp SYSTEM PRIVATE
+    thirdparty)
 target_compile_options(mpudp PRIVATE
     -Weverything
     -Wno-pre-c++20-compat-pedantic
