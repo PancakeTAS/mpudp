@@ -27,7 +27,7 @@ void TunnelHandler::onEvent(std::shared_ptr<sock::Fd>& fd, uint32_t events) {
     sockaddr_in addr{};
 
     // read data from socket
-    sock::buf<MPUDP_RECVBUF> recvbuf{}; // FIXME: maybe move to heap?
+    sock::buf<MPUDP_RECVBUF> recvbuf; // FIXME: maybe move to heap?
     const size_t len = conn.recv(recvbuf, recvbuf.size(), &addr);
 
     // if the tunnel is not yet established

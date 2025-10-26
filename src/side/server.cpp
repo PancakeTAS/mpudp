@@ -60,7 +60,7 @@ void ServerHandler::onEvent(std::shared_ptr<sock::Fd>& fd, uint32_t events) {
     auto& conn = reinterpret_cast<sock::udp::UdpSocket&>(*fd);
     sockaddr_in addr{};
 
-    sock::buf<MPUDP_RECVBUF> recvbuf{}; // FIXME: maybe move to heap?
+    sock::buf<MPUDP_RECVBUF> recvbuf; // FIXME: maybe move to heap?
     const size_t len = conn.recv(recvbuf, recvbuf.size(), &addr);
 
     this->on_data(recvbuf, len);
