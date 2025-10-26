@@ -18,7 +18,7 @@ namespace {
     /// totally one-hundred percent memory-safe pointer to client state
     Client* cstate;
     /// handler for received data from tunnel
-    void on_data(const sock::buf<tun::RECVBUF>& buf, size_t len) {
+    void on_data(const sock::buf<MPUDP_RECVBUF>& buf, size_t len) {
         if (!cstate->caddr.has_value()) {
             std::cerr << "dropping packet due to no client address\n";
 
@@ -28,7 +28,7 @@ namespace {
         cstate->incomingSocket.send(buf, len, *cstate->caddr);
     }
     /// handler for received data from clients
-    void on_inc_data(const sock::buf<tun::RECVBUF>& buf, size_t len, const sockaddr_in& addr) {
+    void on_inc_data(const sock::buf<MPUDP_RECVBUF>& buf, size_t len, const sockaddr_in& addr) {
         cstate->caddr.emplace(addr);
 
         cstate->outgoingTunnel.write(buf, len);
@@ -67,7 +67,7 @@ void ClientHandler::onEvent(std::shared_ptr<sock::Fd>& fd, uint32_t events) {
     auto& conn = reinterpret_cast<sock::udp::UdpSocket&>(*fd);
     sockaddr_in addr{};
 
-    sock::buf<tun::RECVBUF> recvbuf{}; // FIXME: maybe move to heap?
+    sock::buf<MPUDP_RECVBUF> recvbuf{}; // FIXME: maybe move to heap?
     const size_t len = conn.recv(recvbuf, recvbuf.size(), &addr);
 
     this->on_data(recvbuf, len, addr);

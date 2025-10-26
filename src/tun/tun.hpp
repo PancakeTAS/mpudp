@@ -17,8 +17,6 @@
 
 namespace tun {
 
-    const size_t RECVBUF = 65535; //!< size of the receive buffer
-
     /// state of a single connection
     enum class ConnState {
         UNCONN, //!< no handshake yet
@@ -58,7 +56,7 @@ namespace tun {
     };
 
     /// callback for when data is received
-    using DataCallback = std::function<void(const sock::buf<RECVBUF>& buf, size_t len)>;
+    using DataCallback = std::function<void(const sock::buf<MPUDP_RECVBUF>& buf, size_t len)>;
 
     /// handler for tunnel events
     class TunnelHandler : public epoll::EventHandler {
@@ -93,7 +91,7 @@ namespace tun {
         /// write data to the tunnel
         /// @param buf buffer to write
         /// @param len length of data
-        void write(const sock::buf<RECVBUF>& buf, size_t len);
+        void write(const sock::buf<MPUDP_RECVBUF>& buf, size_t len);
     private:
         in_addr_t peer;
         std::shared_ptr<TunnelHandler> handler;

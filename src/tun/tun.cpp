@@ -27,7 +27,7 @@ void TunnelHandler::onEvent(std::shared_ptr<sock::Fd>& fd, uint32_t events) {
     sockaddr_in addr{};
 
     // read data from socket
-    sock::buf<RECVBUF> recvbuf{}; // FIXME: maybe move to heap?
+    sock::buf<MPUDP_RECVBUF> recvbuf{}; // FIXME: maybe move to heap?
     const size_t len = conn.recv(recvbuf, recvbuf.size(), &addr);
 
     // if the tunnel is not yet established
@@ -104,7 +104,7 @@ void Tunnel::checkConnection(epoll::Epoll& epoll, uint16_t idx) {
     conn->send(handshake, 5, addr);
 }
 
-void Tunnel::write(const sock::buf<RECVBUF>& buf, size_t len) {
+void Tunnel::write(const sock::buf<MPUDP_RECVBUF>& buf, size_t len) {
     if (this->conns.empty())
         throw std::runtime_error("no tunnel connections available");
 

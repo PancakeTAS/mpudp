@@ -25,7 +25,7 @@ void EndpointHandler::onEvent(std::shared_ptr<sock::Fd>& fd, uint32_t events) {
     sockaddr_in addr{};
 
     // read data from socket
-    sock::buf<RECVBUF> recvbuf{}; // FIXME: maybe move to heap?
+    sock::buf<MPUDP_RECVBUF> recvbuf{}; // FIXME: maybe move to heap?
     const size_t len = conn.recv(recvbuf, recvbuf.size(), &addr);
 
     // if the tunnel is not yet established
@@ -79,7 +79,7 @@ Endpoint::Endpoint(epoll::Epoll& epoll, DataCallback on_data,
     this->wrr = wrr::Selector(weights);
 }
 
-void Endpoint::write(const sock::buf<RECVBUF>& buf, size_t len) {
+void Endpoint::write(const sock::buf<MPUDP_RECVBUF>& buf, size_t len) {
     if (this->conns.empty())
         throw std::runtime_error("no tunnel connections available");
 

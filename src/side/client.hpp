@@ -14,7 +14,7 @@
 namespace client {
 
     /// callback for when data is received
-    using DataCallback = std::function<void(const sock::buf<tun::RECVBUF>& buf, size_t len, const sockaddr_in& addr)>;
+    using DataCallback = std::function<void(const sock::buf<MPUDP_RECVBUF>& buf, size_t len, const sockaddr_in& addr)>;
 
     /// handler for events from clients
     class ClientHandler : public epoll::EventHandler {

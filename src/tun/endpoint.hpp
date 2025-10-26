@@ -17,8 +17,6 @@
 
 namespace endpoint {
 
-    const size_t RECVBUF = 65535; //!< size of the receive buffer
-
     /// connection instance
     class Connection : public sock::udp::UdpSocket {
     public:
@@ -57,7 +55,7 @@ namespace endpoint {
     };
 
     /// callback for when data is received
-    using DataCallback = std::function<void(const sock::buf<RECVBUF>& buf, size_t len)>;
+    using DataCallback = std::function<void(const sock::buf<MPUDP_RECVBUF>& buf, size_t len)>;
 
     /// handler for endpoint events
     class EndpointHandler : public epoll::EventHandler {
@@ -87,7 +85,7 @@ namespace endpoint {
         /// write data to the endpoint
         /// @param buf buffer to write
         /// @param len length of data
-        void write(const sock::buf<RECVBUF>& buf, size_t len);
+        void write(const sock::buf<MPUDP_RECVBUF>& buf, size_t len);
     private:
         std::shared_ptr<EndpointHandler> handler;
 

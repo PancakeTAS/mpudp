@@ -14,7 +14,7 @@
 namespace server {
 
     /// callback for when data is received
-    using DataCallback = std::function<void(const sock::buf<endpoint::RECVBUF>& buf, size_t len)>;
+    using DataCallback = std::function<void(const sock::buf<MPUDP_RECVBUF>& buf, size_t len)>;
 
     /// handler for events from the server
     class ServerHandler : public epoll::EventHandler {

@@ -18,11 +18,11 @@ namespace {
     /// totally one-hundred percent memory-safe pointer to server state
     Server* sstate;
     /// handler for received data through tunnel
-    void on_data(const sock::buf<endpoint::RECVBUF>& buf, size_t len) {
+    void on_data(const sock::buf<MPUDP_RECVBUF>& buf, size_t len) {
         sstate->outgoingSocket.send(buf, len, sstate->saddr);
     }
     /// handler for received data from the server
-    void on_inc_data(const sock::buf<endpoint::RECVBUF>& buf, size_t len) {
+    void on_inc_data(const sock::buf<MPUDP_RECVBUF>& buf, size_t len) {
         sstate->incomingEndpoint.write(buf, len);
     }
 }
@@ -60,7 +60,7 @@ void ServerHandler::onEvent(std::shared_ptr<sock::Fd>& fd, uint32_t events) {
     auto& conn = reinterpret_cast<sock::udp::UdpSocket&>(*fd);
     sockaddr_in addr{};
 
-    sock::buf<endpoint::RECVBUF> recvbuf{}; // FIXME: maybe move to heap?
+    sock::buf<MPUDP_RECVBUF> recvbuf{}; // FIXME: maybe move to heap?
     const size_t len = conn.recv(recvbuf, recvbuf.size(), &addr);
 
     this->on_data(recvbuf, len);

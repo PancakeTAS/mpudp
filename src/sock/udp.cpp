@@ -39,7 +39,7 @@ size_t UdpSocket::recv(char* buf, size_t len, sockaddr_in* addr) const {
 }
 
 void UdpSocket::send(const char* buf, size_t len, const sockaddr_in& addr) const {
-    const ssize_t ret = sendto(*this, buf, len, 0,
+    const ssize_t ret = sendto(*this, buf, len, MSG_ZEROCOPY,
             reinterpret_cast<const sockaddr*>(&addr), sizeof(addr));
     if (ret < 0)
         throw sock_error("sendto() failed");
