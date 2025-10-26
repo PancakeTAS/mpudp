@@ -2,6 +2,5 @@
 /build
 
 # ide/lsp files
-/.zed
 /.clangd
 /.cache

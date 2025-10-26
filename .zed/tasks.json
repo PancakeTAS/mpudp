@@ -1,0 +1,14 @@
+[
+  {
+    "label": "Configure Debug build",
+    "command": "rm -rf build && cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_COLOR_DIAGNOSTICS=ON -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_CLANG_TIDY=clang-tidy",
+    "reveal": "no_focus",
+    "hide": "never"
+  },
+  {
+    "label": "Rebuild project",
+    "command": "ninja -C build clean && cmake --build build",
+    "reveal": "no_focus",
+    "hide": "never"
+  }
+]
