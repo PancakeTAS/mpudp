@@ -9,6 +9,7 @@
 #include <memory>
 #include <span>
 #include <stdexcept>
+#include <string>
 #include <unordered_map>
 
 #include <sys/epoll.h>
@@ -94,7 +95,7 @@ namespace epoll {
         /// @param what the error message
         /// @param err the optional errno value
         epoll_error(const std::string& what, int err = errno)
-            : std::runtime_error(what + ": " + std::strerror(err)), code(err) {}
+            : std::runtime_error(what + ": " + std::string(std::strerror(errno))), code(err) {}
 
         /// get the optional errno associated with the error
         /// @return the errno value

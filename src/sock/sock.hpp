@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstring>
 #include <stdexcept>
+#include <string>
 
 #include <netinet/in.h>
 #include <unistd.h>
@@ -51,7 +52,7 @@ namespace sock {
         /// create a new sock_error
         /// @param what the error message
         sock_error(const std::string& what)
-            : std::runtime_error(what + ": " + std::strerror(errno)), code(errno) {}
+            : std::runtime_error(what + ": " + std::string(std::strerror(errno))), code(errno) {}
 
         /// get the errno associated with the error
         [[nodiscard]] int get_errno() const { return code; }
