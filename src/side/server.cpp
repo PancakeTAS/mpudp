@@ -57,7 +57,7 @@ void ServerHandler::onEvent(std::shared_ptr<sock::Fd>& fd, uint32_t events) {
     if ((events & EPOLLIN) == 0)
         return;
 
-    auto& conn = dynamic_cast<sock::udp::UdpSocket&>(*fd);
+    auto& conn = reinterpret_cast<sock::udp::UdpSocket&>(*fd);
     sockaddr_in addr{};
 
     sock::buf<endpoint::RECVBUF> recvbuf{}; // FIXME: maybe move to heap?

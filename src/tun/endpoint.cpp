@@ -21,7 +21,7 @@ void EndpointHandler::onEvent(std::shared_ptr<sock::Fd>& fd, uint32_t events) {
     if ((events & EPOLLIN) == 0)
         return;
 
-    auto& conn = dynamic_cast<Connection&>(*fd);
+    auto& conn = reinterpret_cast<Connection&>(*fd);
     sockaddr_in addr{};
 
     // read data from socket
