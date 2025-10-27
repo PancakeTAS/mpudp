@@ -6,6 +6,7 @@
 #include "../sock/udp.hpp"
 #include "../config.hpp"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <ctime>
@@ -56,7 +57,7 @@ namespace tun {
     };
 
     /// callback for when data is received
-    using DataCallback = std::function<void(const sock::buf<MPUDP_RECVBUF>& buf, size_t len)>;
+    using DataCallback = std::function<void(sock::buf<MPUDP_RECVBUF>& buf, size_t len)>;
 
     /// handler for tunnel events
     class TunnelHandler : public epoll::EventHandler {
@@ -70,6 +71,12 @@ namespace tun {
         void onEvent(std::shared_ptr<sock::Fd>& fd, uint32_t events) override;
     private:
         DataCallback on_data;
+
+        std::array<sock::buf<MPUDP_RECVBUF>, MPUDP_POOLSIZE> recvbufs{};
+        size_t recvidx{}; //!< next buffer to write into
+
+        std::array<std::pair<sock::buf<MPUDP_RECVBUF>*, size_t>, MPUDP_POOLSIZE> reorderbufs{};
+        uint64_t reorderidx{}; //!< next expected index
     };
 
     /// tunnel instance
@@ -91,7 +98,7 @@ namespace tun {
         /// write data to the tunnel
         /// @param buf buffer to write
         /// @param len length of data
-        void write(const sock::buf<MPUDP_RECVBUF>& buf, size_t len);
+        void write(sock::buf<MPUDP_RECVBUF>& buf, size_t len);
     private:
         in_addr_t peer;
         std::shared_ptr<TunnelHandler> handler;
@@ -100,6 +107,7 @@ namespace tun {
         uint16_t baseport{}; //!< lowest port
 
         wrr::Selector wrr{{}};
+        size_t idx{};
     };
 
 

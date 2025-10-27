@@ -5,6 +5,7 @@ project(mpudp
     LANGUAGES CXX)
 
 set(MPUDP_RECVBUF 65535 CACHE STRING "UDP receive buffer size")
+set(MPUDP_POOLSIZE 1024 CACHE STRING "UDP receive buffer cache")
 
 set(SOURCES
     "src/epoll/epoll.cpp"
@@ -27,7 +28,8 @@ set_target_properties(mpudp PROPERTIES
 target_include_directories(mpudp SYSTEM PRIVATE
     thirdparty)
 target_compile_definitions(mpudp PRIVATE
-    MPUDP_RECVBUF=${MPUDP_RECVBUF})
+    MPUDP_RECVBUF=${MPUDP_RECVBUF}
+    MPUDP_POOLSIZE=${MPUDP_POOLSIZE})
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set_target_properties(mpudp PROPERTIES
         EXPORT_COMPILE_COMMANDS ON)

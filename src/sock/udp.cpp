@@ -28,18 +28,18 @@ UdpSocket::UdpSocket(uint16_t port) : UdpSocket() {
         throw sock_error("bind() failed");
 }
 
-size_t UdpSocket::recv(char* buf, size_t len, sockaddr_in* addr) const {
+size_t UdpSocket::recv(char* buf, size_t len, size_t skip, sockaddr_in* addr) const {
     socklen_t addrlen = sizeof(*addr);
 
-    const ssize_t ret = recvfrom(*this, buf, len, 0, reinterpret_cast<sockaddr*>(addr), &addrlen);
+    const ssize_t ret = recvfrom(*this, buf + skip, len - skip, 0, reinterpret_cast<sockaddr*>(addr), &addrlen);
     if (ret < 0)
         throw sock_error("recvfrom() failed");
 
     return static_cast<size_t>(ret);
 }
 
-void UdpSocket::send(const char* buf, size_t len, const sockaddr_in& addr) const {
-    const ssize_t ret = sendto(*this, buf, len, MSG_ZEROCOPY,
+void UdpSocket::send(const char* buf, size_t len, size_t skip, const sockaddr_in& addr) const {
+    const ssize_t ret = sendto(*this, buf + skip, len - skip, MSG_ZEROCOPY,
             reinterpret_cast<const sockaddr*>(&addr), sizeof(addr));
     if (ret < 0)
         throw sock_error("sendto() failed");

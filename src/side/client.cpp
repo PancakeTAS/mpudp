@@ -25,10 +25,10 @@ namespace {
             return;
         }
 
-        cstate->incomingSocket.send(buf, len, *cstate->caddr);
+        cstate->incomingSocket.send(buf, len, 8, *cstate->caddr);
     }
     /// handler for received data from clients
-    void on_inc_data(const sock::buf<MPUDP_RECVBUF>& buf, size_t len, const sockaddr_in& addr) {
+    void on_inc_data(sock::buf<MPUDP_RECVBUF>& buf, size_t len, const sockaddr_in& addr) {
         cstate->caddr.emplace(addr);
 
         cstate->outgoingTunnel.write(buf, len);
@@ -67,8 +67,8 @@ void ClientHandler::onEvent(std::shared_ptr<sock::Fd>& fd, uint32_t events) {
     auto& conn = reinterpret_cast<sock::udp::UdpSocket&>(*fd);
     sockaddr_in addr{};
 
-    sock::buf<MPUDP_RECVBUF> recvbuf; // FIXME: maybe move to heap?
-    const size_t len = conn.recv(recvbuf, recvbuf.size(), &addr);
+    sock::buf<MPUDP_RECVBUF> recvbuf;
+    const size_t len = conn.recv(recvbuf, recvbuf.size(), 8, &addr);
 
     this->on_data(recvbuf, len, addr);
 }

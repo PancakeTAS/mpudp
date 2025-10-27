@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 
+#include <iostream>
 #include <memory>
 
 #include <sys/socket.h>
@@ -19,10 +20,10 @@ namespace {
     Server* sstate;
     /// handler for received data through tunnel
     void on_data(const sock::buf<MPUDP_RECVBUF>& buf, size_t len) {
-        sstate->outgoingSocket.send(buf, len, sstate->saddr);
+        sstate->outgoingSocket.send(buf, len, 8, sstate->saddr);
     }
     /// handler for received data from the server
-    void on_inc_data(const sock::buf<MPUDP_RECVBUF>& buf, size_t len) {
+    void on_inc_data(sock::buf<MPUDP_RECVBUF>& buf, size_t len) {
         sstate->incomingEndpoint.write(buf, len);
     }
 }
@@ -60,8 +61,8 @@ void ServerHandler::onEvent(std::shared_ptr<sock::Fd>& fd, uint32_t events) {
     auto& conn = reinterpret_cast<sock::udp::UdpSocket&>(*fd);
     sockaddr_in addr{};
 
-    sock::buf<MPUDP_RECVBUF> recvbuf; // FIXME: maybe move to heap?
-    const size_t len = conn.recv(recvbuf, recvbuf.size(), &addr);
+    sock::buf<MPUDP_RECVBUF> recvbuf;
+    const size_t len = conn.recv(recvbuf, recvbuf.size(), 8, &addr);
 
     this->on_data(recvbuf, len);
 }

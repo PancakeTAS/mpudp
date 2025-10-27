@@ -9,11 +9,11 @@
 #include <memory>
 #include <stdexcept>
 #include <utility>
+#include <vector>
 
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <vector>
 
 using namespace tun;
 
@@ -26,9 +26,11 @@ void TunnelHandler::onEvent(std::shared_ptr<sock::Fd>& fd, uint32_t events) {
     auto& conn = reinterpret_cast<Connection&>(*fd);
     sockaddr_in addr{};
 
-    // read data from socket
-    sock::buf<MPUDP_RECVBUF> recvbuf; // FIXME: maybe move to heap?
-    const size_t len = conn.recv(recvbuf, recvbuf.size(), &addr);
+    // read packet into buffer
+    sock::buf<MPUDP_RECVBUF>& recvbuf = this->recvbufs.at(this->recvidx);
+    this->recvidx = (this->recvidx + 1) % this->recvbufs.size();
+
+    const size_t len = conn.recv(recvbuf, recvbuf.size(), 0, &addr);
 
     // if the tunnel is not yet established
     // run through the handshake process
@@ -45,8 +47,38 @@ void TunnelHandler::onEvent(std::shared_ptr<sock::Fd>& fd, uint32_t events) {
         return; // skip further processing
     }
 
-    // otherwise process data normally
-    this->on_data(recvbuf, len);
+    // ensure the packet has a valid size
+    // FIXME: this needs to be handled so much better
+    if (len < 5) {
+        std::cerr << "dropping packet due to invalid size (" << len << " bytes)\n";
+        return;
+    }
+
+    // store packet at expected index
+    const size_t idx = *reinterpret_cast<size_t*>(recvbuf.data());
+    this->reorderbufs.at(idx % this->reorderbufs.size()) = std::make_pair(&recvbuf, len);
+
+    // if the difference between the expected idx
+    // and the current idx is too large, drop packets
+    if ((idx - this->reorderidx) > (MPUDP_POOLSIZE - 1)) {
+        std::cerr << "dropping packet due to large index gap (expected "
+                  << this->reorderidx << ", got " << idx << ")\n";
+        this->reorderidx = idx;
+    }
+
+    // flush any in-order packets
+    while (true) {
+        auto& entry = this->reorderbufs.at(this->reorderidx % this->reorderbufs.size());
+        if (entry.first == nullptr)
+            break; // no packet at expected index
+
+        // process data
+        this->on_data(*entry.first, entry.second);
+
+        // clear entry and advance expected index
+        entry.first = nullptr;
+        this->reorderidx++;
+    }
 }
 
 Tunnel::Tunnel(DataCallback on_data, in_addr_t peer,
@@ -101,10 +133,10 @@ void Tunnel::checkConnection(epoll::Epoll& epoll, uint16_t idx) {
         .sin_port = htons(this->baseport + idx),
         .sin_addr = in_addr { .s_addr = this->peer },
     };
-    conn->send(handshake, 5, addr);
+    conn->send(handshake, 5, 0, addr);
 }
 
-void Tunnel::write(const sock::buf<MPUDP_RECVBUF>& buf, size_t len) {
+void Tunnel::write(sock::buf<MPUDP_RECVBUF>& buf, size_t len) {
     if (this->conns.empty())
         throw std::runtime_error("no tunnel connections available");
 
@@ -115,10 +147,12 @@ void Tunnel::write(const sock::buf<MPUDP_RECVBUF>& buf, size_t len) {
         return;
     }
 
+    *reinterpret_cast<size_t*>(buf.data()) = this->idx++;
+
     const sockaddr_in addr{
         .sin_family = AF_INET,
         .sin_port = htons(static_cast<uint16_t>(this->baseport + next)),
         .sin_addr = in_addr { .s_addr = this->peer },
     };
-    conn->send(buf, len, addr);
+    conn->send(buf, len + 8, 0, addr);
 }
